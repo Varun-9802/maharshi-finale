@@ -2,6 +2,10 @@
 
 Maharshi is a college-project crop-health demonstration with a Next.js website, Supabase authentication and private image history, a TensorFlow PlantVillage classifier, and Open-Meteo weather data.
 
+## Quick start on Windows
+
+From the repository root, run `START-MAHARSHI.ps1` in PowerShell. It opens separate backend and website terminals, creates the Python virtual environment if needed, and installs missing dependencies. Before signing in, fill in the Supabase values in `maharshi-main/.env.local`.
+
 ## 1. Requirements
 
 - Node.js 20.9 or newer and npm
