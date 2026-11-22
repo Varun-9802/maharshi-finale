@@ -194,8 +194,6 @@ const liveRiskColor =
   useEffect(() => {
     if (!draft || savedDraft.current) return
     savedDraft.current = true
-    let cancelled = false
-
     ;(async () => {
       const uploadedPaths: string[] = []
       try {
@@ -227,19 +225,16 @@ const liveRiskColor =
         }).select('id').single()
 
         if (error) throw new Error(`Observation save failed: ${error.message}`)
-        if (!cancelled) {
-          setObservationId(data.id)
-          setSaveState('Observation and photos saved. Waiting for AI analysis…')
-        }
+        setObservationId(data.id)
+        setSaveState('Observation and photos saved. Waiting for AI analysis…')
       } catch (error) {
         if (uploadedPaths.length) {
           await createClient().storage.from('crop-images').remove(uploadedPaths)
         }
-        if (!cancelled) setSaveState(error instanceof Error ? error.message : 'Could not save this observation.')
+        setSaveState(error instanceof Error ? error.message : 'Could not save this observation.')
       }
     })()
 
-    return () => { cancelled = true }
   }, [draft])
 
   // Persist the AI output, and refresh the same row when weather data arrives.
