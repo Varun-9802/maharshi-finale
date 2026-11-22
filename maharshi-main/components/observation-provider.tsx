@@ -10,6 +10,7 @@ export type DraftObservation = {
   symptoms: string
   images: DraftImage[]
   messages: DraftMessage[]
+  parentObservationId?: string | null
 }
 
 type ObservationContextValue = {
