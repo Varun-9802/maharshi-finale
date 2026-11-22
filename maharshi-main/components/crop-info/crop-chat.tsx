@@ -86,7 +86,7 @@ export function CropChat() {
     const accepted: DraftImage[] = []
     const errors: string[] = []
     for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) { errors.push(`${file.name}: not an image`); continue }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { errors.push(`${file.name}: use JPG, PNG or WEBP`); continue }
       if (file.size > MAX_FILE_BYTES) { errors.push(`${file.name}: larger than 10 MB`); continue }
       accepted.push({ url: URL.createObjectURL(file), name: file.name, file })
     }
@@ -98,7 +98,7 @@ export function CropChat() {
       }
       setImages([...images, ...accepted.slice(0, remaining)])
     }
-    if (errors.length) setUploadError(`${errors.join('; ')}. Photos must be images under 10 MB.`)
+    if (errors.length) setUploadError(`${errors.join('; ')}. Use JPG, PNG or WEBP images under 10 MB.`)
   }
 
   function removeImage(index: number) {
