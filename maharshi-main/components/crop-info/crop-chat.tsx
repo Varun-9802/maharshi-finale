@@ -1,13 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { ArrowRight, Camera, Check, ImagePlus, Mic, RotateCcw, Send, Sprout, Upload, User } from 'lucide-react'
 import { useObservation, type DraftImage } from '@/components/observation-provider'
 import { Card } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { commonSymptoms } from '@/lib/sample-data'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 type Message = { from: 'bot' | 'user'; text: string; image?: string }
@@ -42,7 +43,11 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024
 
 export function CropChat() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const continueId = searchParams.get('continue')
   const { setDraft } = useObservation()
+  const [parentObservationId, setParentObservationId] = useState<string | null>(null)
+  const [loadingPrevious, setLoadingPrevious] = useState(Boolean(continueId))
   const [messages, setMessages] = useState<Message[]>([{ from: 'bot', text: steps[0].question }])
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Answers>({ crop: '', cropAge: '', symptoms: '' })
@@ -59,6 +64,28 @@ export function CropChat() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, images])
+
+  useEffect(() => {
+    if (!continueId) return
+    let cancelled = false
+    ;(async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('observations').select('id,crop,crop_age,symptoms,conversation').eq('id', continueId).single()
+      if (cancelled) return
+      if (error || !data) {
+        setUploadError('Could not load the previous observation. Please open it again from History.')
+        setLoadingPrevious(false)
+        return
+      }
+      const previous = Array.isArray(data.conversation) ? data.conversation as Message[] : []
+      setAnswers({ crop: data.crop || '', cropAge: data.crop_age || '', symptoms: data.symptoms || '' })
+      setMessages([...previous, { from: 'bot', text: 'Let us continue this crop observation. Upload a fresh photo of the same plant so we can compare its condition over time.' }])
+      setParentObservationId(data.id)
+      setStep(steps.length)
+      setLoadingPrevious(false)
+    })()
+    return () => { cancelled = true }
+  }, [continueId])
 
   function answer(value: string) {
     const text = value.trim()
@@ -111,7 +138,7 @@ export function CropChat() {
 
   function analyse() {
     if (!images.length) return
-    setDraft({ ...answers, images, messages })
+    setDraft({ ...answers, images, messages, parentObservationId })
     router.push('/analysis')
   }
 
@@ -126,6 +153,8 @@ export function CropChat() {
   }
 
   const progress = Math.round(((step + (images.length ? 1 : 0)) / (steps.length + 1)) * 100)
+
+  if (loadingPrevious) return <Card><p className="text-sm text-muted-foreground">Loading your previous observation…</p></Card>
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
