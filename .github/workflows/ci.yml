@@ -40,3 +40,19 @@ jobs:
       - name: Load model and run one inference
         working-directory: maharshi-ai
         run: python smoke_test.py
+
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create project ZIP
+        run: |
+          zip -r Maharshi-Final-Project.zip . \
+            -x ".git/*" "*/node_modules/*" "*/.next/*" "*/venv/*" "*/__pycache__/*" "*.pyc" "*/.env.local" "*/.env" "*/.env.*"
+      - name: Upload project ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maharshi-Final-Project
+          path: Maharshi-Final-Project.zip
+          retention-days: 7
