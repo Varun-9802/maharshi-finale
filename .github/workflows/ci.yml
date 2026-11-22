@@ -35,3 +35,8 @@ jobs:
           python-version: "3.11"
       - name: Check Python syntax
         run: python -m compileall -q maharshi-ai
+      - name: Install AI backend dependencies
+        run: pip install -r maharshi-ai/requirements.txt
+      - name: Load model and run one inference
+        working-directory: maharshi-ai
+        run: python smoke_test.py
