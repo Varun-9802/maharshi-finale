@@ -19,7 +19,7 @@ From the repository root, run `powershell -ExecutionPolicy Bypass -File .\START-
 2. Run these migrations in order:
    - `supabase/migrations/202611180001_initial_schema.sql`
    - `supabase/migrations/202611220001_add_ai_results.sql`
-3. The first migration creates the `observations` table, row-level security, and the private `crop-images` bucket. The second adds the AI prediction, weather result, and saved prevention-recommendation columns.
+3. The first migration creates the `observations` table, row-level security, and the private `crop-images` bucket. The second adds the AI prediction, weather result, saved prevention-recommendation, and follow-up tracking columns. It is safe to run again after updates.
 4. In **Project Settings → API**, copy the project URL and publishable/anon key.
 
 The table is user-scoped through Supabase RLS. Do not put a service-role key in the browser app.
@@ -67,7 +67,7 @@ If the browser is on a different machine, do not use 127.0.0.1 for the AI URL: d
 4. Local weather is retrieved from Open-Meteo after browser location permission is granted.
 5. The observation and private photos are saved to Supabase Storage and `observations`.
 6. The prediction, confidence, top predictions, weather snapshot (when available), risk estimate, and five prevention recommendations are saved back to that same observation.
-7. Open **History** to see previous observations and their detail pages.
+7. Open **History** to see previous observations, suggested next-photo dates, and follow-up status. Open an observation and choose **Continue this observation** to restore its saved conversation and upload a new photo; the new analysis is saved as a linked follow-up record.
 
 ## Important limitations
 
@@ -75,4 +75,4 @@ If the browser is on a different machine, do not use 127.0.0.1 for the AI URL: d
 - A model confidence is not a guarantee of correctness. Treat the output as a screening aid and confirm important diagnoses with a local agricultural expert.
 - The weather risk score is a simple demonstration heuristic using current humidity, precipitation, and temperature. It is not a scientifically validated, crop- and disease-specific epidemiological forecast.
 - Browser location and the AI API require network access. Supabase credentials, OAuth settings, storage bucket, and SQL migrations must be configured in the user's own project.
-- The reminder button and some profile/language preferences are demonstration UI, not push notifications or a fully persisted farmer profile.
+- Next-photo dates are persisted as prototype monitoring suggestions (2 days for high risk, 3 for moderate, 7 for low); they are not crop-specific agronomic prescriptions. Maharshi does not send push notifications. Mark the follow-up complete from the observation detail page after checking the crop.
