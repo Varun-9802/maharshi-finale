@@ -30,6 +30,7 @@ export function AnalysisView() {
   const [reminderSet, setReminderSet] = useState(false)
   const [saveState, setSaveState] = useState('')
   const savedDraft = useRef(false)
+  const [observationId, setObservationId] = useState<string | null>(null)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
 
 const handleWeatherChange = useCallback(
@@ -68,16 +69,11 @@ useEffect(() => {
       const formData = new FormData()
       formData.append('file', imageFile)
 
-      const response = await fetch('http://127.0.0.1:8000/predict', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('AI prediction failed')
-      }
-
-      const data = await response.json()
+      const apiBase = (process.env.NEXT_PUBLIC_MAHARSHI_AI_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+      const response = await fetch(`${apiBase}/predict`, { method: 'POST', body: formData })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.detail || data.message || `AI prediction failed (${response.status})`)
+      if (!data.success || !data.disease || !Array.isArray(data.top_predictions)) throw new Error('The AI service returned an unexpected response.')
       setPrediction(data)
     } catch (error) {
       setPredictionError(
@@ -194,38 +190,89 @@ const liveRiskColor =
       : 'text-primary'
 
 
+  // Save the observation and private photos once, then retain its row ID.
   useEffect(() => {
     if (!draft || savedDraft.current) return
     savedDraft.current = true
+    let cancelled = false
+
+    ;(async () => {
+      const uploadedPaths: string[] = []
+      try {
+        setSaveState('Saving your observation and photos…')
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          setSaveState('Please sign in again to save this observation.')
+          return
+        }
+
+        for (const [index, photo] of draft.images.entries()) {
+          const safeName = photo.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const path = `${user.id}/${crypto.randomUUID()}-${index}-${safeName}`
+          const { error } = await supabase.storage.from('crop-images')
+            .upload(path, photo.file, { contentType: photo.file.type, upsert: false })
+          if (error) throw new Error(`Photo upload failed: ${error.message}`)
+          uploadedPaths.push(path)
+        }
+
+        const { data, error } = await supabase.from('observations').insert({
+          user_id: user.id,
+          crop: draft.crop,
+          crop_age: draft.cropAge,
+          symptoms: draft.symptoms,
+          image_paths: uploadedPaths,
+          conversation: draft.messages,
+          analysis_status: 'pending',
+        }).select('id').single()
+
+        if (error) throw new Error(`Observation save failed: ${error.message}`)
+        if (!cancelled) {
+          setObservationId(data.id)
+          setSaveState('Observation and photos saved. Waiting for AI analysis…')
+        }
+      } catch (error) {
+        if (uploadedPaths.length) {
+          await createClient().storage.from('crop-images').remove(uploadedPaths)
+        }
+        if (!cancelled) setSaveState(error instanceof Error ? error.message : 'Could not save this observation.')
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [draft])
+
+  // Persist the AI output, and refresh the same row when weather data arrives.
+  useEffect(() => {
+    if (!observationId || !prediction) return
+    let cancelled = false
+
     ;(async () => {
       try {
-      setSaveState('Saving your observation…')
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setSaveState('Sign in again to save this observation.'); return }
-      const paths: string[] = []
-      for (const [index, photo] of draft.images.entries()) {
-        const safeName = photo.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-        const path = `${user.id}/${crypto.randomUUID()}-${index}-${safeName}`
-        const { error } = await supabase.storage.from('crop-images').upload(path, photo.file, { contentType: photo.file.type, upsert: false })
-        if (error) { setSaveState(`Photo upload failed: ${error.message}`); return }
-        paths.push(path)
-      }
-      
-const { error } = await supabase.from('observations').insert({
-  user_id: user.id,
-  crop: draft.crop,
-  crop_age: draft.cropAge,
-  symptoms: draft.symptoms,
-  image_paths: paths,
-  conversation: draft.messages,
-  analysis_status: 'pending'
-})
+        const supabase = createClient()
+        const { error } = await supabase.from('observations').update({
+          predicted_crop: prediction.crop,
+          predicted_disease: prediction.disease,
+          prediction_confidence: prediction.confidence,
+          predicted_class: prediction.predicted_class,
+          top_predictions: prediction.top_predictions,
+          risk_score: liveRiskScore,
+          risk_level: liveRiskLevel,
+          weather_snapshot: weatherData,
+          analysis_status: 'completed',
+        }).eq('id', observationId)
 
-      setSaveState(error ? `Photos uploaded, but observation save failed: ${error.message}` : 'Observation and photos saved to your account.')
-      } catch (error) { setSaveState(`Could not save this observation: ${error instanceof Error ? error.message : 'Unexpected error'}`) }
+        if (error) throw new Error(error.message)
+        if (!cancelled) setSaveState(liveRiskScore === null
+          ? 'Crop photo and AI prediction saved. Risk estimate is waiting for weather data.'
+          : 'Observation, AI prediction and weather-based risk saved successfully.')
+      } catch (error) {
+        if (!cancelled) setSaveState(`AI result save failed: ${error instanceof Error ? error.message : 'Unexpected error'}`)
+      }
     })()
-  }, [draft])
+
+    return () => { cancelled = true }
+  }, [observationId, prediction, liveRiskScore, liveRiskLevel, weatherData])
 
   return (
     <div className="flex flex-col gap-6">
