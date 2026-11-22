@@ -19,7 +19,7 @@ From the repository root, run `powershell -ExecutionPolicy Bypass -File .\START-
 2. Run these migrations in order:
    - `supabase/migrations/202611180001_initial_schema.sql`
    - `supabase/migrations/202611220001_add_ai_results.sql`
-3. The first migration creates the `observations` table, row-level security, and the private `crop-images` bucket. The second adds the AI prediction and weather result columns.
+3. The first migration creates the `observations` table, row-level security, and the private `crop-images` bucket. The second adds the AI prediction, weather result, and saved prevention-recommendation columns.
 4. In **Project Settings → API**, copy the project URL and publishable/anon key.
 
 The table is user-scoped through Supabase RLS. Do not put a service-role key in the browser app.
@@ -66,7 +66,7 @@ If the browser is on a different machine, do not use 127.0.0.1 for the AI URL: d
 3. The first photo is sent to the TensorFlow model for classification.
 4. Local weather is retrieved from Open-Meteo after browser location permission is granted.
 5. The observation and private photos are saved to Supabase Storage and `observations`.
-6. The prediction, confidence, top predictions, and available weather-based risk estimate are saved back to that same observation.
+6. The prediction, confidence, top predictions, weather snapshot (when available), risk estimate, and five prevention recommendations are saved back to that same observation.
 7. Open **History** to see previous observations and their detail pages.
 
 ## Important limitations
