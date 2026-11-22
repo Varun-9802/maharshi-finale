@@ -142,6 +142,7 @@ export function CropChat({ continueId }: { continueId?: string | null }) {
 
   function restart() {
     images.forEach((item) => URL.revokeObjectURL(item.url))
+    setParentObservationId(null)
     setImages([])
     setAnswers({ crop: '', cropAge: '', symptoms: '' })
     setStep(0)
