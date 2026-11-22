@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s · MAHARSHI',
   },
   description:
-    'Crop photo records, account-based history and local weather for a crop health monitoring project. Disease-model predictions are not yet connected.',
+    'AI-assisted crop disease screening, local weather insights, prevention guidance, and secure crop observation history.',
   generator: 'v0.app',
   icons: {
     icon: [
