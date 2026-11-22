@@ -18,7 +18,7 @@ export default async function DashboardPage() {
     <section className="grid grid-cols-2 gap-4 lg:grid-cols-3">
       <Card><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">Saved observations</p><Activity className="size-4 text-primary"/></div><p className="mt-4 font-serif text-4xl">{count ?? 0}</p></Card>
       <Card><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">Account</p><Sprout className="size-4 text-primary"/></div><p className="mt-4 truncate text-sm font-semibold">{user?.email}</p><p className="mt-1 text-xs text-muted-foreground">Signed in securely</p></Card>
-      <Card className="col-span-2 lg:col-span-1"><p className="text-sm text-muted-foreground">Disease model status</p><p className="mt-4 text-lg font-semibold">Not connected</p><p className="mt-1 text-xs text-muted-foreground">Analysis screen still uses clearly labelled demo results.</p></Card>
+      <Card className="col-span-2 lg:col-span-1"><p className="text-sm text-muted-foreground">Disease model status</p><p className="mt-4 text-lg font-semibold">38-class model included</p><p className="mt-1 text-xs text-muted-foreground">Start the local Python API to enable image predictions.</p></Card>
     </section>
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <Card><CardTitle icon={<Sprout/>} title="Recent observations" aside={<Link href="/history" className="text-sm font-medium text-primary hover:underline">View history</Link>}/>
