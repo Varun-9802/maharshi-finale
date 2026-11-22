@@ -269,6 +269,7 @@ const liveRiskColor =
           risk_score: liveRiskScore,
           risk_level: liveRiskLevel,
           weather_snapshot: weatherData,
+          prevention_recommendations: recommendations,
           analysis_status: 'completed',
         }).eq('id', observationId)
 
