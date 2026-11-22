@@ -237,6 +237,17 @@ const liveRiskColor =
 
   }, [draft])
 
+  useEffect(() => {
+    if (!observationId || !predictionError) return
+    const markFailed = async () => {
+      const supabase = createClient()
+      await supabase.from('observations')
+        .update({ analysis_status: 'failed' })
+        .eq('id', observationId)
+    }
+    markFailed()
+  }, [observationId, predictionError])
+
   // Persist the AI output, and refresh the same row when weather data arrives.
   useEffect(() => {
     if (!observationId || !prediction) return
