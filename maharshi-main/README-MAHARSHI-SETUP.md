@@ -4,7 +4,7 @@ Maharshi is a college-project crop-health demonstration with a Next.js website, 
 
 ## Quick start on Windows
 
-From the repository root, run `powershell -ExecutionPolicy Bypass -File .\\START-MAHARSHI.ps1`. It opens separate backend and website terminals, creates the Python virtual environment if needed, and installs missing dependencies. Before signing in, fill in the Supabase values in `maharshi-main/.env.local`.
+From the repository root, run `powershell -ExecutionPolicy Bypass -File .\START-MAHARSHI.ps1`. It opens separate backend and website terminals, creates the Python virtual environment if needed, and installs missing dependencies. Before signing in, fill in the Supabase values in `maharshi-main/.env.local`.
 
 ## 1. Requirements
 
