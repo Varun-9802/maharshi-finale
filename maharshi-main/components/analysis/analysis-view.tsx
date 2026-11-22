@@ -225,6 +225,7 @@ const liveRiskColor =
           symptoms: draft.symptoms,
           image_paths: uploadedPaths,
           conversation: draft.messages,
+          parent_observation_id: draft.parentObservationId ?? null,
           analysis_status: 'pending',
         }).select('id').single()
 
@@ -270,6 +271,8 @@ const liveRiskColor =
           risk_level: liveRiskLevel,
           weather_snapshot: weatherData,
           prevention_recommendations: recommendations,
+          next_photo_recommended_at: (() => { const days = liveRiskLevel === 'High' ? 2 : liveRiskLevel === 'Moderate' ? 3 : 7; const date = new Date(); date.setDate(date.getDate() + days); return date.toISOString() })(),
+          follow_up_status: 'pending',
           analysis_status: 'completed',
         }).eq('id', observationId)
 
@@ -491,13 +494,13 @@ const liveRiskColor =
                 </span>
                 <div>
                   <p className="text-sm text-primary-foreground/80">Next photo recommended</p>
-                  <p className="text-xl font-semibold">Friday, 20 Nov 2026</p>
-                  <p className="text-xs text-primary-foreground/75">In 3 days · same spot, same time of day</p>
+                  <p className="text-xl font-semibold">{new Date(Date.now() + (liveRiskLevel === 'High' ? 2 : liveRiskLevel === 'Moderate' ? 3 : 7) * 86400000).toLocaleDateString()}</p>
+                  <p className="text-xs text-primary-foreground/75">Suggested check in {liveRiskLevel === 'High' ? '2' : liveRiskLevel === 'Moderate' ? '3' : '7'} days · same spot, same time of day. This is a prototype reminder, not an agronomic prescription.</p>
                 </div>
               </div>
               <Button
                 size="lg"
-                onClick={() => setReminderSet(true)}
+                onClick={async () => { if (!observationId) { setSaveState('Wait until your observation is saved before setting a reminder.'); return } const { error } = await createClient().from('observations').update({ follow_up_status: 'pending' }).eq('id', observationId); if (error) setSaveState(`Could not save reminder: ${error.message}`); else { setReminderSet(true); setSaveState('Follow-up recommendation is saved in History.') } }}
                 aria-pressed={reminderSet}
                 className="h-12 rounded-full bg-primary-foreground px-5 text-base text-primary hover:bg-primary-foreground/90"
               >
