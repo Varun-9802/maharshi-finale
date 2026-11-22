@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { ArrowRight, Camera, Check, ImagePlus, Mic, RotateCcw, Send, Sprout, Upload, User } from 'lucide-react'
 import { useObservation, type DraftImage } from '@/components/observation-provider'
@@ -41,10 +41,8 @@ const steps = [
 const photoQuestion = 'Thank you. Now upload one or more clear photos of the affected leaf or plant.'
 const MAX_FILE_BYTES = 10 * 1024 * 1024
 
-export function CropChat() {
+export function CropChat({ continueId }: { continueId?: string | null }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const continueId = searchParams.get('continue')
   const { setDraft } = useObservation()
   const [parentObservationId, setParentObservationId] = useState<string | null>(null)
   const [loadingPrevious, setLoadingPrevious] = useState(Boolean(continueId))
