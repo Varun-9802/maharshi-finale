@@ -20,7 +20,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardTitle, RiskBadge, SampleTag } from '@/components/shared'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { WeatherCard, type WeatherData } from '@/components/weather-card'
-import { getSampleResult } from '@/lib/sample-data'
 import { cn } from '@/lib/utils'
 
 const riskColor = { Low: 'text-primary', Moderate: 'text-warning', High: 'text-destructive' }
@@ -92,7 +91,6 @@ useEffect(() => {
   const cropAge = draft?.cropAge ?? '52 days'
   const symptoms = draft?.symptoms ?? 'Brown concentric spots on lower leaves'
   const imageSrc = draft?.images[0]?.url ?? '/images/crop-tomato.png'
-  const result = getSampleResult(crop)
 
 const diseaseName = prediction?.disease?.toLowerCase() ?? ''
 
@@ -146,7 +144,13 @@ const diseaseRecommendations = diseaseName.includes('septoria')
 
 const recommendations = prediction
   ? diseaseRecommendations
-  : result.recommendations
+  : [
+      'Keep monitoring the same plants and photograph any changes.',
+      'Avoid overhead irrigation where possible and keep leaves dry.',
+      'Remove dead plant debris and maintain good airflow.',
+      'Use clean tools and avoid moving between wet plants.',
+      'Confirm suspected disease with a local agricultural expert.',
+    ]
 
 
 const liveRiskScore = (() => {
